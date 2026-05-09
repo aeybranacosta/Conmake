@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConMake | Certified Conlang Classic</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #27ae60;
+            --danger: #e74c3c;
+            --bg: #f4f7f6;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); 
+            margin: 0;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+
+        /* Sticky Header */
+        header {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        header h1 { margin: 0; font-size: 2.5rem; letter-spacing: 2px; }
+        header p { margin: 5px 0 15px; opacity: 0.8; font-style: italic; }
+
+        #controls {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn {
+            cursor: pointer;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .btn-make { background: var(--accent); color: white; font-size: 1.1rem; }
+        .btn-make:hover { background: #219150; transform: scale(1.05); }
+
+        #langDisplay { color: var(--primary); font-weight: bold; font-size: 1.2rem; }
+
+        /* Slots Grid */
+        .slot-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+            gap: 20px; 
+            width: 90%; 
+            max-width: 1200px; 
+            padding: 40px 0;
+        }
+
+        .slot { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 12px; 
+            border: 2px solid #ddd; 
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .slot:hover { border-color: var(--accent); }
+
+        .slot-num { font-size: 0.8rem; color: #888; display: block; margin-bottom: 5px; }
+
+        canvas { 
+            border: 1px solid #eee; 
+            background: #fafafa; 
+            cursor: crosshair; 
+            touch-action: none; 
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+
+        input { 
+            padding: 8px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px;
+            width: 80%; 
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .slot-actions { margin-top: 10px; display: flex; justify-content: center; gap: 10px; }
+
+        .btn-save { background: #3498db; color: white; padding: 5px 15px; font-size: 0.9rem; }
+        .btn-clear { background: var(--danger); color: white; padding: 5px 10px; font-size: 0.9rem; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>CONMAKE</h1>
+        <p>This is a certified conlang classic.</p>
+        <div id="controls">
+            <button id="makeLangBtn" class="btn btn-make">+ Make Language</button>
+            <div id="langDisplay"></div>
+        </div>
+    </header>
+
+    <div id="slotsArea" class="slot-container hidden"></div>
+
+    <script>
+        const makeLangBtn = document.getElementById('makeLangBtn');
+        const slotsArea = document.getElementById('slotsArea');
+        const langDisplay = document.getElementById('langDisplay');
+
+        makeLangBtn.addEventListener('click', () => {
+            const name = prompt("Name your certified classic:");
+            if (name) {
+                langDisplay.innerText = "Project: " + name;
+                slotsArea.classList.remove('hidden');
+                createSlots();
+                // Scroll down slightly to show slots
+                window.scrollTo({ top: 150, behavior: 'smooth' });
+            }
+        });
+
+        function createSlots() {
+            slotsArea.innerHTML = ""; // Clear existing
+            for (let i = 1; i <= 123; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                
+                const slotLabel = document.createElement('span');
+                slotLabel.className = 'slot-num';
+                slotLabel.innerText = `SLOT ${i}`;
+
+                const input = document.createElement('input');
+                input.placeholder = "Enter word...";
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = 180;
+                canvas.height = 120;
+                const ctx = canvas.getContext('2d');
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = '#2c3e50';
+
+                // Drawing Logic
+                let drawing = false;
+                
+                const getPos = (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    return {
+                        x: clientX - rect.left,
+                        y: clientY - rect.top
+                    };
+                };
+
+                const startDraw = (e) => {
+                    drawing = true;
+                    const pos = getPos(e);
+                    ctx.beginPath();
+                    ctx.moveTo(pos.x, pos.y);
+                };
+
+                const moveDraw = (e) => {
+                    if (!drawing) return;
+                    const pos = getPos(e);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                    e.preventDefault();
+                };
+
+                const stopDraw = () => { drawing = false; };
+
+                // Mouse Events
+                canvas.addEventListener('mousedown', startDraw);
+                canvas.addEventListener('mousemove', moveDraw);
+                window.addEventListener('mouseup', stopDraw);
+
+                // Touch Events (for mobile/tablet)
+                canvas.addEventListener('touchstart', startDraw);
+                canvas.addEventListener('touchmove', moveDraw);
+                canvas.addEventListener('touchend', stopDraw);
+
+                const actions = document.createElement('div');
+                actions.className = 'slot-actions';
+
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'btn btn-save';
+                saveBtn.innerText = "Save";
+                saveBtn.onclick = () => {
+                    if (!input.value) {
+                        alert("Name the word before saving!");
+                        return;
+                    }
+                    alert(`Glyph for "${input.value}" recorded!`);
+                };
+
+                const clearBtn = document.createElement('button');
+                clearBtn.className = 'btn btn-clear';
+                clearBtn.innerText = "C";
+                clearBtn.title = "Clear Canvas";
+                clearBtn.onclick = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                actions.appendChild(saveBtn);
+                actions.appendChild(clearBtn);
+
+                slot.appendChild(slotLabel);
+                slot.appendChild(input);
+                slot.appendChild(canvas);
+                slot.appendChild(actions);
+                slotsArea.appendChild(slot);
+            }
+        }
+    </script>
+</body>
+</html>
